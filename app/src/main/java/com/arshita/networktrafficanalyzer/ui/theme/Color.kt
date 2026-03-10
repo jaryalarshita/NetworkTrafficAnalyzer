@@ -22,3 +22,4 @@ val TextMuted         = Color(0xFF484F58)
 // ── Misc ──
 val DividerColor      = Color(0xFF21262D)
 val StatusOnline      = Color(0xFF2ECC71)
+val WarningYellow     = Color(0xFFF1C40F)   // Warning / caution text
