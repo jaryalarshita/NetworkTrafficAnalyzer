@@ -32,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arshita.networktrafficanalyzer.ui.theme.*
+import com.arshita.networktrafficanalyzer.viewmodel.DashboardViewModel
 import com.arshita.networktrafficanalyzer.vpn.TrafficVpnService
 import kotlin.math.sin
 
@@ -78,9 +79,16 @@ private val sampleApps = listOf(
 @Composable
 fun DashboardScreen(
     modifier: Modifier = Modifier,
+    viewModel: DashboardViewModel? = null,
     onToggleVpn: () -> Unit = {}
 ) {
     val vpnRunning by TrafficVpnService.isRunning.collectAsState()
+
+    // Observe ViewModel state, fall back to sample data for previews
+    val statsFromVm    = viewModel?.stats?.collectAsState()?.value
+    val topAppsFromVm  = viewModel?.topApps?.collectAsState()?.value
+    val displayStats   = if (!statsFromVm.isNullOrEmpty()) statsFromVm else sampleStats
+    val displayApps    = if (!topAppsFromVm.isNullOrEmpty()) topAppsFromVm else sampleApps
     Scaffold(
         containerColor = DarkBackground,
         topBar = {
@@ -129,7 +137,7 @@ fun DashboardScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    sampleStats.forEach { stat ->
+                    displayStats.forEach { stat ->
                         StatCard(
                             stat = stat,
                             modifier = Modifier.weight(1f)
@@ -164,7 +172,7 @@ fun DashboardScreen(
             }
 
             // ── App traffic list ──
-            itemsIndexed(sampleApps) { _, app ->
+            itemsIndexed(displayApps) { _, app ->
                 AppTrafficRow(app = app)
             }
         }

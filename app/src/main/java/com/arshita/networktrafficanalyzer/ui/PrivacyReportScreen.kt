@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arshita.networktrafficanalyzer.ui.theme.*
+import com.arshita.networktrafficanalyzer.viewmodel.DashboardViewModel
 
 // ─── Data models ────────────────────────────────────────────────────────────────
 
@@ -105,7 +106,16 @@ private val sampleRecommendations = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PrivacyReportScreen(modifier: Modifier = Modifier) {
+fun PrivacyReportScreen(
+    modifier: Modifier = Modifier,
+    viewModel: DashboardViewModel? = null
+) {
+    // Observe ViewModel, fall back to sample data for previews
+    val score        = viewModel?.riskScore?.collectAsState()?.value ?: SAMPLE_SCORE
+    val consumers    = viewModel?.dataConsumers?.collectAsState()?.value
+    val obs          = viewModel?.observations?.collectAsState()?.value
+    val displayConsumers = if (!consumers.isNullOrEmpty()) consumers else sampleConsumers
+    val displayObs       = if (!obs.isNullOrEmpty()) obs else sampleObservations
     Scaffold(
         containerColor = DarkBackground,
         topBar = {
@@ -141,18 +151,18 @@ fun PrivacyReportScreen(modifier: Modifier = Modifier) {
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
             // ── Risk Dial ──
-            item { RiskDialCard(score = SAMPLE_SCORE) }
+            item { RiskDialCard(score = score) }
 
             // ── Top Data Consumers ──
             item { SectionHeader(title = "Top Data Consumers") }
-            itemsIndexed(sampleConsumers) { _, consumer ->
+            itemsIndexed(displayConsumers) { _, consumer ->
                 DataConsumerRow(consumer = consumer)
             }
 
             // ── Observations ──
             item { SectionHeader(title = "Observations") }
-            itemsIndexed(sampleObservations) { _, obs ->
-                ObservationRow(observation = obs)
+            itemsIndexed(displayObs) { _, obsItem ->
+                ObservationRow(observation = obsItem)
             }
 
             // ── Recommendations ──

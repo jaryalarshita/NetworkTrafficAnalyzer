@@ -7,8 +7,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.arshita.networktrafficanalyzer.ui.DashboardScreen
 import com.arshita.networktrafficanalyzer.ui.theme.NetworkTrafficAnalyzerTheme
+import com.arshita.networktrafficanalyzer.viewmodel.DashboardViewModel
 import com.arshita.networktrafficanalyzer.vpn.TrafficVpnService
 
 class MainActivity : ComponentActivity() {
@@ -30,7 +32,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NetworkTrafficAnalyzerTheme {
+                // viewModel() creates OR retrieves the ViewModel.
+                // It survives rotation and lives as long as the Activity.
+                val viewModel: DashboardViewModel = viewModel()
+
                 DashboardScreen(
+                    viewModel   = viewModel,
                     onToggleVpn = { toggleVpn() }
                 )
             }
@@ -39,14 +46,10 @@ class MainActivity : ComponentActivity() {
 
     // ─── VPN control helpers ────────────────────────────────────────────
 
-    /**
-     * Called when the user taps the Start / Stop button.
-     */
     private fun toggleVpn() {
         if (TrafficVpnService.isRunning.value) {
             stopVpn()
         } else {
-            // VpnService.prepare() returns null if permission is already granted
             val intent = VpnService.prepare(this)
             if (intent != null) {
                 vpnPermissionLauncher.launch(intent)
