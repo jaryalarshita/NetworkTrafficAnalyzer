@@ -1,6 +1,7 @@
 package com.arshita.networktrafficanalyzer.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -14,6 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arshita.networktrafficanalyzer.ui.theme.*
+import com.arshita.networktrafficanalyzer.vpn.TrafficVpnService
 import kotlin.math.sin
 
 // ─── Data models ────────────────────────────────────────────────────────────────
@@ -72,7 +76,11 @@ private val sampleApps = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(modifier: Modifier = Modifier) {
+fun DashboardScreen(
+    modifier: Modifier = Modifier,
+    onToggleVpn: () -> Unit = {}
+) {
+    val vpnRunning by TrafficVpnService.isRunning.collectAsState()
     Scaffold(
         containerColor = DarkBackground,
         topBar = {
@@ -107,6 +115,14 @@ fun DashboardScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
+            // ── VPN control card ──
+            item {
+                VpnControlCard(
+                    isRunning = vpnRunning,
+                    onToggle = onToggleVpn
+                )
+            }
+
             // ── Stats cards row ──
             item {
                 Row(
@@ -435,6 +451,81 @@ fun DetailChip(label: String, value: String) {
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             color = TextPrimary
         )
+    }
+}
+
+// ─── VPN Control Card ───────────────────────────────────────────────────────────
+
+@Composable
+fun VpnControlCard(
+    isRunning: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val statusColor by animateColorAsState(
+        targetValue = if (isRunning) AccentGreen else AccentRed,
+        animationSpec = tween(400),
+        label = "vpn_status_color"
+    )
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Status dot
+            Box(
+                Modifier
+                    .size(10.dp)
+                    .background(statusColor, CircleShape)
+            )
+            Spacer(Modifier.width(12.dp))
+
+            // Status text
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (isRunning) "VPN Active" else "VPN Inactive",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary
+                )
+                Text(
+                    text = if (isRunning) "Capturing device traffic…"
+                           else "Tap Start to begin capture",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextSecondary
+                )
+            }
+
+            // Start / Stop button
+            Button(
+                onClick = onToggle,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isRunning) AccentRed else AccentGreen
+                ),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Icon(
+                    imageVector = if (isRunning) Icons.Default.Close
+                                 else Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = if (isRunning) "Stop" else "Start Capture",
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
     }
 }
 
